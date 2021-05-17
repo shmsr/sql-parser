@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"strings"
+	"unicode"
 )
 
 // Scanner represents a lexical scanner.
@@ -18,7 +19,7 @@ func NewScanner(r io.Reader) *Scanner {
 }
 
 // Scan returns the next token and literal value.
-func (s *Scanner) Scan() (tok Token, lit string) {
+func (s *Scanner) Scan() (Token, string) {
 	// Read the next rune.
 	ch := s.read()
 
@@ -35,19 +36,19 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 
 	// Otherwise read the individual character.
 	switch ch {
+	default:
+		return ILLEGAL, string(ch)
+	case ',':
+		return COMMA, ","
+	case '*':
+		return ASTERISK, "*"
 	case eof:
 		return EOF, ""
-	case '*':
-		return ASTERISK, string(ch)
-	case ',':
-		return COMMA, string(ch)
 	}
-
-	return ILLEGAL, string(ch)
 }
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
-func (s *Scanner) scanWhitespace() (tok Token, lit string) {
+func (s *Scanner) scanWhitespace() (Token, string) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -69,7 +70,7 @@ func (s *Scanner) scanWhitespace() (tok Token, lit string) {
 }
 
 // scanIdent consumes the current rune and all contiguous ident runes.
-func (s *Scanner) scanIdent() (tok Token, lit string) {
+func (s *Scanner) scanIdent() (Token, string) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -88,15 +89,14 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	}
 
 	// If the string matches a keyword then return that keyword.
-	switch strings.ToUpper(buf.String()) {
-	case "SELECT":
-		return SELECT, buf.String()
+	switch bs := buf.String(); strings.ToUpper(bs) {
+	default:
+		return IDENT, bs
 	case "FROM":
-		return FROM, buf.String()
+		return FROM, bs
+	case "SELECT":
+		return SELECT, bs
 	}
-
-	// Otherwise return as a regular identifier.
-	return IDENT, buf.String()
 }
 
 // read reads the next rune from the buffered reader.
@@ -112,14 +112,14 @@ func (s *Scanner) read() rune {
 // unread places the previously read rune back on the reader.
 func (s *Scanner) unread() { _ = s.r.UnreadRune() }
 
-// isWhitespace returns true if the rune is a space, tab, or newline.
-func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
+// isWhitespace returns true if the rune is a whitespace.
+func isWhitespace(ch rune) bool { return unicode.IsSpace(ch) }
 
-// isLetter returns true if the rune is a letter.
-func isLetter(ch rune) bool { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') }
+// isLetter returns true if the rune is a letter (category L).
+func isLetter(ch rune) bool { return unicode.IsLetter(ch) }
 
-// isDigit returns true if the rune is a digit.
-func isDigit(ch rune) bool { return (ch >= '0' && ch <= '9') }
+// isDigit returns true if the rune is a decimal digit.
+func isDigit(ch rune) bool { return unicode.IsDigit(ch) }
 
 // eof represents a marker rune for the end of the reader.
 var eof = rune(0)

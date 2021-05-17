@@ -1,40 +1,41 @@
-package sql_test
+package sql
 
 import (
 	"strings"
 	"testing"
-
-	"github.com/benbjohnson/sql-parser"
 )
 
 // Ensure the scanner can scan tokens correctly.
-func TestScanner_Scan(t *testing.T) {
-	var tests = []struct {
+func TestNewScanner(t *testing.T) {
+	tests := []struct {
 		s   string
-		tok sql.Token
+		tok Token
 		lit string
 	}{
 		// Special tokens (EOF, ILLEGAL, WS)
-		{s: ``, tok: sql.EOF},
-		{s: `#`, tok: sql.ILLEGAL, lit: `#`},
-		{s: ` `, tok: sql.WS, lit: " "},
-		{s: "\t", tok: sql.WS, lit: "\t"},
-		{s: "\n", tok: sql.WS, lit: "\n"},
+		{s: ``, tok: EOF},
+		{s: `#`, tok: ILLEGAL, lit: `#`},
+		{s: " ", tok: WS, lit: " "},
+		{s: "\t", tok: WS, lit: "\t"},
+		{s: "\n", tok: WS, lit: "\n"},
+		{s: "\v", tok: WS, lit: "\v"},
+		{s: "\f", tok: WS, lit: "\f"},
+		{s: "\r", tok: WS, lit: "\r"},
 
 		// Misc characters
-		{s: `*`, tok: sql.ASTERISK, lit: "*"},
+		{s: `*`, tok: ASTERISK, lit: "*"},
 
 		// Identifiers
-		{s: `foo`, tok: sql.IDENT, lit: `foo`},
-		{s: `Zx12_3U_-`, tok: sql.IDENT, lit: `Zx12_3U_`},
+		{s: `foo`, tok: IDENT, lit: `foo`},
+		{s: `Zx12_3U_-`, tok: IDENT, lit: `Zx12_3U_`},
 
 		// Keywords
-		{s: `FROM`, tok: sql.FROM, lit: "FROM"},
-		{s: `SELECT`, tok: sql.SELECT, lit: "SELECT"},
+		{s: `FROM`, tok: FROM, lit: "FROM"},
+		{s: `SELECT`, tok: SELECT, lit: "SELECT"},
 	}
 
 	for i, tt := range tests {
-		s := sql.NewScanner(strings.NewReader(tt.s))
+		s := NewScanner(strings.NewReader(tt.s))
 		tok, lit := s.Scan()
 		if tt.tok != tok {
 			t.Errorf("%d. %q token mismatch: exp=%q got=%q <%q>", i, tt.s, tt.tok, tok, lit)

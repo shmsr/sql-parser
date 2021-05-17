@@ -10,11 +10,11 @@ const (
 	WS
 
 	// Literals
-	IDENT // main
+	IDENT
 
 	// Misc characters
-	ASTERISK // *
-	COMMA    // ,
+	ASTERISK
+	COMMA
 
 	// Keywords
 	SELECT
